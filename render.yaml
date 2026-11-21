@@ -1,11 +1,10 @@
 services:
   - type: web
-    name: finpilot-integrated-api
-    env: python
+    name: personal-finance-coach-api
+    runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
-      - key: FINPILOT_SECRET
-        generateValue: true
-      - key: CORS_ORIGINS
-        value: https://finplot-ai.vercel.app
+      - key: DATABASE_URL
+        sync: false
