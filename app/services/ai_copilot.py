@@ -1,55 +1,69 @@
 import os
+from dotenv import load_dotenv
 from groq import Groq
+
+load_dotenv()
 
 
 def ask_financial_copilot(question: str, financial_context: dict) -> str:
     api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
-        return "AI service is not configured. Please add your Groq API key."
-
-    client = Groq(api_key=api_key)
-
-    system_prompt = """
-    You are Fin-Plot AI, an intelligent personal financial coach.
-
-    Your role:
-    - Analyze the user's actual financial data.
-    - Give practical, personalized financial advice.
-    - Identify overspending and unnecessary expenses.
-    - Help users budget, save money, and achieve financial goals.
-    - Explain financial concepts in simple language.
-    - Be honest, realistic, and supportive.
-    - Never invent financial data.
-    - If information is missing, clearly mention it.
-    - Avoid generic advice when actual data is available.
-
-    Format responses clearly using headings and bullet points when useful.
-    Use Indian Rupees (₹) when the user's data is in INR.
-    """
-
-    user_prompt = f"""
-    USER FINANCIAL DATA:
-    {financial_context}
-
-    USER QUESTION:
-    {question}
-
-    Analyze the available data and provide a personalized response.
-    """
+        return "Groq API key is not configured."
 
     try:
+        client = Groq(api_key=api_key)
+
+        prompt = f"""
+You are an intelligent personal finance coach.
+
+Act as a professional financial advisor who is friendly,
+practical, honest, and easy to understand.
+
+Analyze the user's actual financial data.
+Never invent financial numbers.
+
+FINANCIAL CONTEXT:
+{financial_context}
+
+USER QUESTION:
+{question}
+
+INSTRUCTIONS:
+- Give a clear and direct answer.
+- Use actual financial information provided.
+- Explain financial concepts simply.
+- Identify risks and overspending.
+- Suggest realistic ways to save money.
+- Consider the user's financial goals.
+- Use Indian Rupees (₹).
+- Avoid generic advice.
+- Never guarantee investment returns.
+- Use headings and bullet points where appropriate.
+"""
+
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {
+                    "role": "system",
+                    "content": "You are an expert personal finance coach specializing in Indian personal finance."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
             ],
             temperature=0.4,
             max_tokens=1000,
         )
 
-        return response.choices[0].message.content
+        answer = response.choices[0].message.content
+
+        if answer:
+            return answer
+
+        return "Groq returned an empty response."
 
     except Exception as e:
-        return f"AI analysis failed: {str(e)}"
+        return f"Groq AI error: {str(e)}"
