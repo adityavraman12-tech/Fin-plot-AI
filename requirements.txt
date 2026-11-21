@@ -7,3 +7,5 @@ pydantic-settings
 python-dotenv
 python-multipart
 pandas
+groq
+httpx
